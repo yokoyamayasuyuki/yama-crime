@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#d8f0e4">
+<title>峰々の記録 | Mountain Journal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:100dvh;background:#f0f8f2;font-family:'Georgia','Times New Roman',serif;color:#1a2e20;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+.wrap{max-width:430px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+header{padding:max(28px,env(safe-area-inset-top)) 20px 16px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#d8f0e4,transparent)}
+.hl{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;background:#2e7848;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+h1{font-size:20px;font-weight:700;color:#1a2e20}
+.hsub{font-size:9px;letter-spacing:.3em;color:#5aaa78;text-transform:uppercase}
+.hbtns{display:flex;align-items:center;gap:7px}
+.add-btn{width:44px;height:44px;border-radius:12px;background:#2e7848;border:none;color:#fff;font-size:24px;cursor:pointer;touch-action:manipulation;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.add-btn:active{opacity:.8}
+.io-btn-h{width:40px;height:40px;border-radius:11px;background:#e8f8ee;border:1px solid #a8d8b8;color:#2e7848;font-size:17px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
+.io-btn-h:active{background:#d0f0e0}
+nav{display:flex;padding:0 16px 14px;gap:6px;position:sticky;top:0;z-index:10;background:rgba(240,248,242,.97);padding-top:8px}
+.tb{flex:1;padding:9px 2px;background:#fff;border:1px solid #daeade;border-radius:12px;color:#96b89a;font-size:10px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;touch-action:manipulation;min-height:50px;justify-content:center}
+.tb.active{background:#2e7848;border-color:transparent;color:#fff}
+.tb:active{opacity:.75}
+.ti{font-size:15px}
+main{flex:1;padding:0 16px calc(80px + env(safe-area-inset-bottom))}
+.hidden{display:none!important}
+.sl{font-size:10px;letter-spacing:.2em;color:#96b89a;text-transform:uppercase;margin-bottom:12px}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.sc{border-radius:18px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.si{font-size:20px;margin-bottom:6px}
+.slb{font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px;opacity:.7}
+.sv{font-size:26px;font-weight:700;line-height:1}
+.su{font-size:12px;margin-left:2px;font-weight:400;opacity:.65}
+.card{background:#fff;border:1px solid #daeade;border-radius:16px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}
+.card:active{background:#f8fdf9}
+.ci{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.cn{font-size:15px;font-weight:700;color:#1a2e20}
+.cs{font-size:11px;color:#5a7a60;margin-top:2px}
+.mc{background:#fff;border:1px solid #daeade;border-radius:20px;margin-bottom:12px;overflow:hidden}
+.mc-head{display:flex;align-items:center;gap:12px;padding:14px 14px 12px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.mc-head:active{background:#f8fdf9}
+.mc-icon{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.mc-name{font-size:16px;font-weight:700;color:#1a2e20}
+.mc-sub{font-size:11px;color:#5a7a60;margin-top:2px;line-height:1.4}
+.mc-badge-count{background:#2e7848;color:#fff;border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;white-space:nowrap}
+.mc-expand{color:#5aaa78;font-size:18px;transition:transform .2s;margin-left:auto;flex-shrink:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.mc-expand.open{transform:rotate(90deg)}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:10px;padding:2px 8px;border-radius:20px;background:#e4f4ea;border:1px solid rgba(90,170,120,.35);color:#2e7848;font-weight:500}
+.climbs-wrap{display:none;border-top:1px solid #eaf4ee;background:#f8fdf9}
+.climbs-wrap.open{display:block}
+.climb-item{padding:12px 14px;border-bottom:1px solid #eaf4ee}
+.climb-item:last-child{border-bottom:none}
+.climb-num{display:inline-block;background:#2e7848;color:#fff;border-radius:20px;font-size:9px;font-weight:700;padding:2px 7px;margin-bottom:5px}
+.climb-date{font-size:12px;font-weight:600;color:#1a2e20;margin-bottom:3px}
+.climb-stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+.cst{font-size:11px;color:#5a7a60;display:flex;align-items:center;gap:2px}
+.db{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600}
+.dh{background:#ffe8e8;color:#c03030;border:1px solid #f0b0b0}
+.dm{background:#fff6e0;color:#9a7010;border:1px solid #e0cc80}
+.de{background:#e8f8e8;color:#2e7848;border:1px solid #90d8a0}
+.dp{background:#f0e8ff;color:#7030b0;border:1px solid #c890f0}
+.climb-note-preview{font-size:11px;color:#7a9a80;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.climb-photos-strip{display:flex;gap:5px;overflow-x:auto;margin-top:7px;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+.cph{width:64px;height:48px;border-radius:7px;overflow:hidden;flex-shrink:0;cursor:pointer;touch-action:manipulation}
+.cph img{width:100%;height:100%;object-fit:cover;display:block}
+.climb-actions{display:flex;gap:5px;margin-top:8px}
+.ca-btn{padding:8px 10px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:none;touch-action:manipulation;flex:1;text-align:center}
+.ca-view{background:#e8f8ee;color:#2e7848;border:1px solid #a8d8b8}
+.ca-edit{background:#e8f0ff;color:#4050a0;border:1px solid #b0b8f0}
+.ca-del{background:#fff0f0;color:#c04040;border:1px solid #f0b0b0;flex:0 0 auto}
+.ca-btn:active{opacity:.7}
+.add-climb-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:12px;background:#f4fcf6;border:1.5px dashed #90d0a8;color:#2e7848;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.add-climb-btn:active{background:#e8f8ee}
+.mc-foot{display:flex;gap:7px;padding:10px 14px;border-top:1px solid #eaf4ee;background:#f8fdf9}
+.mf-btn{flex:1;padding:9px;border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:none;text-align:center;touch-action:manipulation}
+.mf-edit{background:#e8f0ff;color:#4050a0;border:1px solid #b0b8f0}
+.mf-del{background:#fff0f0;color:#c04040;border:1px solid #f0b0b0}
+.mf-btn:active{opacity:.7}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pi{border-radius:16px;overflow:hidden;cursor:pointer;position:relative;touch-action:manipulation}
+.pi:active{opacity:.85}
+.pi.wide{grid-column:1/-1;aspect-ratio:16/9}
+.pi.sq{aspect-ratio:1}
+.pi img{width:100%;height:100%;object-fit:cover;display:block}
+.po{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55) 0%,transparent 55%)}
+.pinfo{position:absolute;bottom:10px;left:12px}
+.pn{color:#fff;font-weight:600;font-size:13px}
+.pe{font-size:10px;color:rgba(255,255,255,.7)}
+.pemoji{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.88);border-radius:8px;padding:2px 6px;font-size:14px}
+.bgh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.bgc{font-size:13px;color:#2e7848;font-weight:700}
+.pbb{background:#ddeee4;border-radius:6px;height:6px;overflow:hidden;margin-bottom:20px}
+.pb{height:100%;border-radius:6px;background:linear-gradient(90deg,#2e7848,#5aaa78);transition:width .8s ease}
+.bgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.bi{border-radius:16px;padding:14px 6px;text-align:center}
+.bi.earned{background:#e4f4ea;border:1px solid rgba(90,170,120,.4)}
+.bi.locked{background:#f8faf8;border:1px solid #daeade;opacity:.45}
+.bii{font-size:24px;margin-bottom:5px}
+.bi.locked .bii{filter:grayscale(100%)}
+.bin{font-size:10px;line-height:1.3}
+.bin.earned{color:#2e7848;font-weight:600}
+.bin.locked{color:#96b89a}
+.bck{font-size:9px;color:#fff;margin-top:5px;background:#2e7848;border-radius:20px;padding:2px 7px;display:inline-block;font-weight:600}
+.badge-add-btn{width:100%;padding:13px;margin-top:4px;background:#e8f8ee;border:1.5px dashed #5aaa78;border-radius:14px;color:#2e7848;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.badge-add-btn:active{background:#d4f0e0}
+.bi-custom{position:relative}
+.bi-edit-row{display:flex;gap:4px;margin-top:6px;justify-content:center}
+.bi-edit-small{padding:4px 7px;font-size:9px;border-radius:7px;cursor:pointer;font-family:inherit;font-weight:600;touch-action:manipulation}
+.bi-edit-small.edit{background:#e8f4ff;color:#2050a0;border:1px solid #b0c8f0}
+.bi-edit-small.del{background:#fff0f0;color:#c03030;border:1px solid #f0b0b0}
+.back-btn{background:none;border:none;color:#2e7848;font-size:14px;cursor:pointer;padding:4px 0 16px;font-family:inherit;display:flex;align-items:center;gap:5px;font-weight:700;touch-action:manipulation;min-height:44px}
+.detail-mtn-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.detail-ico{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.detail-mtn-name{font-size:22px;font-weight:700;color:#1a2e20}
+.detail-mtn-sub{font-size:11px;color:#5a7a60;margin-top:2px;line-height:1.5}
+.cd{background:#fff;border:1px solid #daeade;border-radius:18px;padding:14px;margin-bottom:14px}
+.cd-header{display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap}
+.cd-num{background:#2e7848;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:2px 10px}
+.cd-date{font-size:12px;color:#5a7a60;font-weight:600}
+.dpw{position:relative;border-radius:14px;overflow:hidden;margin-bottom:8px}
+.dpw img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;cursor:zoom-in}
+.ddiff{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.92);border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700}
+.pslider{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:3px;-webkit-overflow-scrolling:touch}
+.pslide{flex-shrink:0;width:70px;height:50px;border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;touch-action:manipulation}
+.pslide img{width:100%;height:100%;object-fit:cover;display:block}
+.pslide.act{border:2px solid #2e7848}
+.dstats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px}
+.dstat{background:#e4f4ea;border:1px solid rgba(90,170,120,.25);border-radius:12px;padding:10px;text-align:center}
+.dsico{font-size:13px;color:#2e7848;margin-bottom:2px;font-weight:700}
+.dslb{font-size:9px;color:#5a7a60;margin-bottom:2px}
+.dsval{font-size:12px;font-weight:700;color:#2e7848}
+.mbox{background:#f8fdf9;border:1px solid #daeade;border-radius:14px;padding:14px;margin-bottom:10px}
+.mlb{font-size:9px;color:#96b89a;letter-spacing:.12em;margin-bottom:7px;text-transform:uppercase;font-weight:600}
+.mtxt{font-size:13px;line-height:1.9;color:#5a7a60;white-space:pre-wrap}
+.cd-actions{display:flex;gap:7px;margin-top:12px}
+.cda-btn{flex:1;padding:12px;border-radius:11px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;border:none;text-align:center;touch-action:manipulation}
+.cda-edit{background:#e8f0ff;color:#4050a0;border:1px solid #b0b8f0}
+.cda-del{background:#fff0f0;color:#c04040;border:1px solid #f0b0b0}
+.cda-btn:active{opacity:.7}
+.add-climb-big{width:100%;padding:14px;background:#e8f8ee;border:1.5px dashed #5aaa78;border-radius:14px;color:#2e7848;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;touch-action:manipulation}
+.add-climb-big:active{background:#d4f0e0}
+.detail-del-mtn{width:100%;margin-top:12px;padding:12px;background:#fff0f0;border:1px solid #f0c0c0;color:#c04040;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.detail-del-mtn:active{background:#ffe0e0}
+.mo{position:fixed;inset:0;background:rgba(20,40,24,.4);display:flex;align-items:flex-end;z-index:200;backdrop-filter:blur(5px)}
+.mb{width:100%;max-width:430px;margin:0 auto;background:#f4fcf6;border-radius:26px 26px 0 0;border:1px solid #daeade;padding:22px 18px calc(36px + env(safe-area-inset-bottom));max-height:92vh;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.mh{width:34px;height:4px;background:#daeade;border-radius:2px;margin:0 auto 18px}
+.mtr{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.mt{font-weight:700;font-size:17px;color:#1a2e20}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:10px;color:#5a7a60;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px;font-weight:600}
+.field input,.field textarea,.field select{width:100%;padding:12px 13px;background:#fff;border:1px solid #daeade;border-radius:11px;color:#1a2e20;font-size:16px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:#5aaa78}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a7a60' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6}
+.pua{border:2px dashed #a0d0b0;border-radius:12px;padding:18px;text-align:center;cursor:pointer;background:#f8fdf9;touch-action:manipulation}
+.pua:active{background:#edf8f1}
+.uico{font-size:24px;margin-bottom:4px}
+.utxt{font-size:13px;color:#5a7a60}
+.usub{font-size:11px;color:#96b89a;margin-top:2px}
+.pmg{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.pm-thumb{position:relative;width:76px;height:76px;border-radius:11px;overflow:hidden;border:2px solid #daeade;flex-shrink:0}
+.pm-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.pm-del{position:absolute;top:3px;right:3px;width:22px;height:22px;background:rgba(192,64,64,.88);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation}
+.pm-badge{position:absolute;bottom:3px;left:3px;background:rgba(46,120,72,.85);color:#fff;font-size:8px;border-radius:4px;padding:1px 4px;font-weight:600}
+.tiw{display:flex;gap:5px;flex-wrap:wrap;padding:7px;background:#fff;border:1px solid #daeade;border-radius:11px;min-height:46px;align-items:center;cursor:text}
+.tiw:focus-within{border-color:#5aaa78}
+.tc{display:flex;align-items:center;gap:3px;background:#e4f4ea;border-radius:20px;padding:3px 9px;font-size:12px;color:#2e7848;font-weight:500}
+.tc button{background:none;border:none;color:#5a7a60;cursor:pointer;font-size:13px;padding:0;line-height:1;width:18px;height:18px;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.tiw input{border:none;outline:none;font-family:inherit;font-size:16px;color:#1a2e20;min-width:80px;flex:1;background:transparent;padding:3px 0}
+.sub-btn{width:100%;padding:16px;background:#2e7848;border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:7px;touch-action:manipulation}
+.sub-btn:active{background:#236038}
+.lb{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:300;display:flex;align-items:center;justify-content:center}
+.lb img{max-width:95vw;max-height:88vh;border-radius:10px;object-fit:contain;touch-action:pinch-zoom}
+.lb-x{position:absolute;top:max(20px,env(safe-area-inset-top));right:18px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.lb-p,.lb-n{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:22px;cursor:pointer;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;touch-action:manipulation}
+.lb-p{left:10px}.lb-n{right:10px}
+.co{position:fixed;inset:0;background:rgba(20,40,24,.4);z-index:400;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
+.cb{background:#fff;border-radius:18px;padding:24px 20px;max-width:300px;width:100%;text-align:center}
+.ct{font-size:17px;font-weight:700;color:#1a2e20;margin-bottom:8px}
+.cm{font-size:13px;color:#5a7a60;line-height:1.7;margin-bottom:20px}
+.cbs{display:flex;gap:8px}
+.cc{flex:1;padding:13px;background:#f0f8f2;border:1px solid #daeade;border-radius:11px;color:#5a7a60;font-size:14px;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.cok{flex:1;padding:13px;background:#c03030;border:none;border-radius:11px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.cc:active,.cok:active{opacity:.8}
+.empty{text-align:center;padding:40px 20px;color:#96b89a}
+.empty .ei{font-size:44px;margin-bottom:10px}
+.empty p{font-size:13px;line-height:1.7}
+.toast{position:fixed;bottom:max(28px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#1a2e20;color:#fff;padding:11px 20px;border-radius:11px;font-size:13px;z-index:500;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.bab{width:100%;padding:15px;margin-top:5px;background:#2e7848;border:none;border-radius:16px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.bab:active{background:#236038}
+/* IO パネル */
+.io-overlay{position:fixed;inset:0;background:rgba(20,40,24,.45);z-index:200;display:flex;align-items:flex-end;backdrop-filter:blur(4px)}
+.io-panel{width:100%;max-width:430px;margin:0 auto;background:#f4fcf6;border-radius:26px 26px 0 0;padding:24px 20px calc(36px + env(safe-area-inset-bottom));border:1px solid #daeade}
+.io-title{font-size:17px;font-weight:700;color:#1a2e20;margin-bottom:6px;text-align:center}
+.io-sub{font-size:12px;color:#5a7a60;text-align:center;margin-bottom:20px;line-height:1.7}
+.io-row{display:flex;gap:10px;margin-bottom:16px}
+.io-action{flex:1;padding:16px 8px;border-radius:16px;border:none;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:6px;touch-action:manipulation}
+.io-action:active{opacity:.8}
+.io-export{background:#2e7848;color:#fff}
+.io-import{background:#e8f0ff;color:#4050a0;border:1px solid #b0b8f0}
+.io-action-icon{font-size:24px}
+.io-action-label{font-size:13px;font-weight:700}
+.io-action-sub{font-size:10px;opacity:.75}
+.io-note{font-size:11px;color:#5a7a60;background:#f0f8f2;border-radius:12px;padding:12px 14px;line-height:1.7;margin-bottom:12px;text-align:center}
+.io-close{width:100%;padding:13px;background:#fff;border:1px solid #daeade;border-radius:13px;color:#5a7a60;font-size:14px;cursor:pointer;font-family:inherit;touch-action:manipulation}
+.io-close:active{background:#f0f8f2}
+
+.yr-section{margin-bottom:20px}
+.yr-card{background:#fff;border:1px solid #daeade;border-radius:16px;margin-bottom:8px;overflow:hidden}
+.yr-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.yr-head:active{background:#f8fdf9}
+.yr-year{font-size:16px;font-weight:700;color:#1a2e20}
+.yr-summary{display:flex;gap:8px;align-items:center}
+.yr-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px}
+.yr-badge-g{background:#e4f4ea;color:#2e7848;border:1px solid #a8d8b8}
+.yr-badge-p{background:#f0e8ff;color:#7030b0;border:1px solid #c890f0}
+.yr-chevron{color:#5aaa78;font-size:16px;transition:transform .2s;flex-shrink:0}
+.yr-chevron.open{transform:rotate(90deg)}
+.yr-body{display:none;border-top:1px solid #eaf4ee;padding:12px 14px}
+.yr-body.open{display:block}
+.yr-rows{display:flex;flex-direction:column;gap:7px}
+.yr-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin:0 -10px}
+.yr-row:active{background:#f0f8f2}
+.yr-mtn-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.yr-mtn-name{font-size:13px;font-weight:600;color:#1a2e20;flex:1}
+.yr-mtn-sub{font-size:10px;color:#5a7a60;margin-top:1px}
+.yr-mtn-cnt{display:flex;gap:4px;align-items:center;flex-shrink:0}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hl">
+    <div class="logo">🏔️</div>
+    <div><div class="hsub">Mountain Journal</div><h1>峰々の記録</h1></div>
+  </div>
+  <div class="hbtns">
+    <button class="io-btn-h" onclick="openIoPanel()" title="データ共有">⇅</button>
+    <button class="add-btn" onclick="openMtnModal()">＋</button>
+  </div>
+</header>
+<nav>
+  <button class="tb active" onclick="switchTab('home',this)"><span class="ti">🏠</span>ホーム</button>
+  <button class="tb" onclick="switchTab('hikes',this)"><span class="ti">⛰️</span>記録</button>
+  <button class="tb" onclick="switchTab('photos',this)"><span class="ti">📷</span>写真</button>
+  <button class="tb" onclick="switchTab('badges',this)"><span class="ti">🏅</span>バッジ</button>
+</nav>
+<main>
+  <div id="tab-home"></div>
+  <div id="tab-hikes" class="hidden"></div>
+  <div id="tab-photos" class="hidden"></div>
+  <div id="tab-badges" class="hidden"></div>
+  <div id="tab-detail" class="hidden"></div>
+</main>
+</div>
+
+<!-- IO パネル -->
+<div id="io-overlay" class="io-overlay hidden" onclick="if(event.target===this)closeIoPanel()">
+  <div class="io-panel">
+    <div class="mh"></div>
+    <div class="io-title">⇅ データ共有</div>
+    <div class="io-sub" style="margin-bottom:14px">用途に合わせてエクスポート形式を選べます</div>
+
+    <div style="font-size:11px;font-weight:700;color:#5a7a60;margin-bottom:6px;padding-left:2px">💻 PC用（写真あり）</div>
+    <div class="io-row" style="margin-bottom:14px">
+      <button class="io-action io-export" onclick="doExport()" id="export-btn">
+        <span class="io-action-icon">📦</span>
+        <span class="io-action-label">ZIPで保存</span>
+        <span class="io-action-sub">写真込み・PC復元用</span>
+      </button>
+      <button class="io-action io-import" onclick="document.getElementById('import-file-zip').click()">
+        <span class="io-action-icon">📥</span>
+        <span class="io-action-label">ZIPを読込</span>
+        <span class="io-action-sub">PC復元・引継ぎ</span>
+      </button>
+    </div>
+
+    <div style="font-size:11px;font-weight:700;color:#5a7a60;margin-bottom:6px;padding-left:2px">📱 iPhone用（写真なし）</div>
+    <div class="io-row">
+      <button class="io-action io-export" onclick="doExportMeta()" id="export-meta-btn">
+        <span class="io-action-icon">📤</span>
+        <span class="io-action-label">JSONで保存</span>
+        <span class="io-action-sub">記録のみ・iPhone同期</span>
+      </button>
+      <button class="io-action io-import" onclick="document.getElementById('import-file-json').click()">
+        <span class="io-action-icon">📥</span>
+        <span class="io-action-label">JSONを読込</span>
+        <span class="io-action-sub">iPhone・PC共通</span>
+      </button>
+    </div>
+
+    <input type="file" id="import-file-zip" accept=".zip" style="display:none" onchange="doImport(event,'zip')">
+    <input type="file" id="import-file-json" accept=".json" style="display:none" onchange="doImport(event,'json')">
+    <div class="io-note" style="margin-top:14px">💡 iPhone同期：JSONをLINEでiPhoneへ送る<br>　→ iPhoneのSafariでファイルを開く → インポート<br>📷 写真はPC管理。iPhoneでは記録・日付・メモのみ同期</div>
+    <button class="io-close" onclick="closeIoPanel()">閉じる</button>
+  </div>
+</div>
+
+<!-- MOUNTAIN MODAL -->
+<div id="mtn-modal" class="mo hidden" onclick="if(event.target===this)closeMtnModal()">
+  <div class="mb"><div class="mh"></div><div class="mtr"><span style="font-size:26px">🗻</span><div class="mt" id="mtn-modal-title">山を追加</div></div>
+    <div class="field"><label>山の名前 ＊</label><input type="text" id="mm-name" placeholder="例：富士山"></div>
+    <div class="field"><label>標高 (m)</label><input type="number" id="mm-elev" placeholder="例：3776"></div>
+    <div class="field"><label>場所</label><input type="text" id="mm-loc" placeholder="例：静岡県・山梨県"></div>
+    <div class="field"><label>タグ（Enterで追加）</label>
+      <div class="tiw" onclick="document.getElementById('mm-tag-input').focus()">
+        <span id="mm-tags-wrap"></span>
+        <input type="text" id="mm-tag-input" placeholder="例：百名山" onkeydown="handleMmTag(event)" style="display:inline;width:auto;padding:3px 0;font-size:16px;border:none;outline:none;background:transparent;font-family:inherit;color:#1a2e20;min-width:80px;flex:1">
+      </div>
+    </div>
+    <button class="sub-btn" onclick="submitMtn()">✓ 保存する</button>
+  </div>
+</div>
+<!-- CLIMB MODAL -->
+<div id="climb-modal" class="mo hidden" onclick="if(event.target===this)closeClimbModal()">
+  <div class="mb"><div class="mh"></div>
+    <div class="mtr"><span id="cm-mtn-emoji" style="font-size:26px">⛰️</span>
+      <div><div class="mt" id="cm-title">登頂記録を追加</div><div id="cm-mtn-name-display" style="font-size:11px;color:#5a7a60;margin-top:2px"></div></div>
+    </div>
+    <div class="field"><label>日付 ＊</label><input type="date" id="cm-date"></div>
+    <div class="field"><label>歩行距離 (km)</label><input type="number" id="cm-dist" step="0.1" placeholder="例：14.2"></div>
+    <div class="field"><label>所要時間</label><input type="text" id="cm-dur" placeholder="例：9h 00m"></div>
+    <div class="field"><label>難易度</label><select id="cm-diff"><option>初級</option><option>中級</option><option>上級</option></select></div>
+    <div class="field"><label>天気</label><input type="text" id="cm-weather" placeholder="例：晴れ、強風"></div>
+    <div class="field"><label>同行者</label><input type="text" id="cm-with" placeholder="例：ソロ、家族4人"></div>
+    <div class="field" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #daeade;border-radius:11px;padding:13px">
+      <input type="checkbox" id="cm-partial" style="width:20px;height:20px;accent-color:#7030b0;cursor:pointer;flex-shrink:0">
+      <label for="cm-partial" style="font-size:14px;color:#1a2e20;cursor:pointer;letter-spacing:0;text-transform:none;font-weight:500;margin:0">⚠️ 途中下山（登頂できず）</label>
+    </div>
+    <div class="field"><label>感想・メモ</label><textarea id="cm-note" placeholder="その回の感想、コース状況…"></textarea></div>
+    <div class="field"><label>写真（複数選択可）</label>
+      <div class="pua" onclick="document.getElementById('cm-photo-input').click()">
+        <input type="file" id="cm-photo-input" accept="image/*" multiple style="display:none" onchange="handleClimbPhotos(event)">
+        <div class="uico">📷</div><div class="utxt">タップして写真を追加</div><div class="usub">複数選択OK</div>
+      </div>
+      <div class="pmg" id="cm-pmg"></div>
+    </div>
+    <button class="sub-btn" onclick="submitClimb()">✓ 記録する</button>
+  </div>
+</div>
+<!-- BADGE MODAL -->
+<div id="badge-modal" class="mo hidden" onclick="if(event.target===this)closeBadgeModal()">
+  <div class="mb"><div class="mh"></div><div class="mtr"><span style="font-size:26px">🏅</span><div class="mt" id="bm-title">マイバッジを追加</div></div>
+    <div class="field"><label>アイコン（絵文字）</label><input type="text" id="bm-icon" placeholder="例：🌸" style="font-size:22px;text-align:center"></div>
+    <div class="field"><label>バッジ名 ＊</label><input type="text" id="bm-name" placeholder="例：冬山チャレンジャー"></div>
+    <div class="field" style="display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #daeade;border-radius:11px;padding:13px">
+      <input type="checkbox" id="bm-earned" style="width:20px;height:20px;accent-color:#2e7848;cursor:pointer;flex-shrink:0">
+      <label for="bm-earned" style="font-size:14px;color:#1a2e20;cursor:pointer;letter-spacing:0;text-transform:none;font-weight:500;margin:0">達成済みにする</label>
+    </div>
+    <button class="sub-btn" onclick="saveBadge()">✓ 保存する</button>
+  </div>
+</div>
+<!-- LIGHTBOX -->
+<div id="lb" class="lb hidden" onclick="closeLb()">
+  <button class="lb-x" onclick="closeLb()">✕</button>
+  <button class="lb-p" onclick="event.stopPropagation();lbNav(-1)">‹</button>
+  <img id="lb-img" src="" alt="" onclick="event.stopPropagation()">
+  <button class="lb-n" onclick="event.stopPropagation();lbNav(1)">›</button>
+</div>
+<!-- CONFIRM -->
+<div id="confirm" class="co hidden">
+  <div class="cb"><div class="ct">🗑 削除しますか？</div><div class="cm" id="cm-txt"></div>
+    <div class="cbs"><button class="cc" onclick="closeConfirm()">キャンセル</button><button class="cok" id="cok">削除する</button></div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script>
+const EMOJIS=['🗻','⛰️','🌿','🍂','🌲','🌸','❄️','🌄','🏕️','🦅','🌾','🍃','🏔️','🌊'];
+const BGS=['linear-gradient(135deg,#e8f4e8,#d4ecd4)','linear-gradient(135deg,#eaecf8,#dce0f4)','linear-gradient(135deg,#fdf0e4,#f8e4cc)','linear-gradient(135deg,#e8f0fc,#d4e4f8)','linear-gradient(135deg,#fce8f4,#f8d4ec)','linear-gradient(135deg,#f4fce8,#e4f8d4)','linear-gradient(135deg,#fce8e8,#f8d4d4)','linear-gradient(135deg,#e8f8fc,#d4ecf8)'];
+let mountains=[],climbs=[],customBadges=[],nextMtnId=10,nextClimbId=500;
+const DEFAULT_MOUNTAINS=[{id:1,name:'富士山',elevation:3776,location:'静岡県・山梨県',tags:['百名山','日本最高峰'],emoji:'🗻',bg:'linear-gradient(135deg,#e8f4e8,#d4ecd4)'},{id:2,name:'尾瀬・至仏山',elevation:2228,location:'群馬県',tags:['百名山','高山植物'],emoji:'🌿',bg:'linear-gradient(135deg,#e8f0e4,#d8e8d0)'},{id:3,name:'槍ヶ岳',elevation:3180,location:'長野県・岐阜県',tags:['百名山','岩稜'],emoji:'⛰️',bg:'linear-gradient(135deg,#eaecf8,#dce0f4)'},{id:4,name:'高尾山',elevation:599,location:'東京都',tags:['ハイキング'],emoji:'🍂',bg:'linear-gradient(135deg,#fdf0e4,#f8e4cc)'}];
+const DEFAULT_CLIMBS=[{id:101,mtnId:1,date:'2022-08-20',distance:14.2,duration:'9h 00m',difficulty:'上級',weather:'晴れのち曇り',with:'ソロ',note:'初めての富士山。吉田ルートで登頂。高山病で少し頭痛があったが無事登頂できた。御来光は雲で見えなかったのが残念。',photos:['https://images.unsplash.com/photo-1490806843957-31f4c9a91c65?w=600&q=80']},{id:102,mtnId:1,date:'2024-09-15',distance:13.8,duration:'8h 30m',difficulty:'上級',weather:'快晴',with:'友人2人',note:'2回目の富士山。今回は御殿場ルートに挑戦。御来光が絶景！',photos:['https://images.unsplash.com/photo-1542082873-c1a13c90ac84?w=600&q=80','https://images.unsplash.com/photo-1570521462033-3015e76e7432?w=600&q=80']},{id:201,mtnId:2,date:'2024-07-22',distance:9.6,duration:'5h 15m',difficulty:'中級',weather:'晴れ',with:'家族3人',note:'ニッコウキスゲが満開。湿原の風景が最高だった。',photos:['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80']},{id:301,mtnId:3,date:'2024-08-10',distance:22.4,duration:'2日間',difficulty:'上級',weather:'晴れ',with:'山岳会メンバー',note:'穂先への登りはスリル満点。山荘での星空が忘れられない。',photos:['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&q=80']},{id:401,mtnId:4,date:'2023-04-08',distance:5.2,duration:'2h 20m',difficulty:'初級',weather:'晴れ',with:'家族4人',note:'春の高尾山。桜が綺麗だった。',photos:[]},{id:402,mtnId:4,date:'2023-11-12',distance:5.8,duration:'2h 40m',difficulty:'初級',weather:'快晴',with:'ソロ',note:'紅葉が見頃。山頂から富士山が綺麗に見えた。',photos:['https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600&q=80']},{id:403,mtnId:4,date:'2024-03-20',distance:6.1,duration:'3h 00m',difficulty:'初級',weather:'曇り',with:'友人1人',note:'春霞の高尾山。梅が咲いていて良かった。',photos:[]}];
+
+const SK='mj_v3';
+
+// ── IndexedDB（写真専用） ────────────────────────────────
+let _db=null;
+function _openDB(){
+  return new Promise((res,rej)=>{
+    if(_db){res(_db);return;}
+    const req=indexedDB.open('mj_photos',1);
+    req.onupgradeneeded=e=>e.target.result.createObjectStore('photos',{keyPath:'k'});
+    req.onsuccess=e=>{_db=e.target.result;res(_db);};
+    req.onerror=e=>rej(e);
+  });
+}
+function _idbPut(k,v){return _openDB().then(d=>new Promise((res,rej)=>{const tx=d.transaction('photos','readwrite');tx.objectStore('photos').put({k,v});tx.oncomplete=res;tx.onerror=rej;}));}
+function _idbGet(k){return _openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction('photos','readonly').objectStore('photos').get(k);r.onsuccess=e=>res(e.target.result?.v||null);r.onerror=rej;}));}
+function _idbDel(k){return _openDB().then(d=>new Promise((res,rej)=>{const tx=d.transaction('photos','readwrite');tx.objectStore('photos').delete(k);tx.oncomplete=res;tx.onerror=rej;}));}
+function _idbAll(){return _openDB().then(d=>new Promise((res,rej)=>{const r=d.transaction('photos','readonly').objectStore('photos').getAll();r.onsuccess=e=>res(e.target.result||[]);r.onerror=rej;}));}
+
+async function _savePhotos(cid,urls){
+  const all=await _idbAll();
+  const old=all.filter(r=>r.k.startsWith('p_'+cid+'_')).map(r=>r.k);
+  await Promise.all(old.map(k=>_idbDel(k)));
+  await Promise.all(urls.map((u,i)=>_idbPut('p_'+cid+'_'+i,u)));
+}
+async function _loadPhotos(cid){
+  const all=await _idbAll();
+  return all.filter(r=>r.k.startsWith('p_'+cid+'_')).sort((a,b)=>{
+    return parseInt(a.k.split('_').pop())-parseInt(b.k.split('_').pop());
+  }).map(r=>r.v);
+}
+async function _delPhotos(cid){
+  const all=await _idbAll();
+  await Promise.all(all.filter(r=>r.k.startsWith('p_'+cid+'_')).map(r=>_idbDel(r.k)));
+}
+
+// ── localStorage（メタデータのみ） ──────────────────────
+function loadData(){
+  try{
+    const s=localStorage.getItem(SK);
+    if(s){
+      const d=JSON.parse(s);
+      mountains=d.mountains||[];climbs=d.climbs||[];customBadges=d.customBadges||[];
+      nextMtnId=d.nextMtnId||10;nextClimbId=d.nextClimbId||500;
+      return;
+    }
+  }catch(e){}
+  mountains=JSON.parse(JSON.stringify(DEFAULT_MOUNTAINS));
+  climbs=JSON.parse(JSON.stringify(DEFAULT_CLIMBS));
+  customBadges=[];
+}
+function saveAll(){
+  try{
+    // 写真はIndexedDBに保存するのでlocalStorageには含めない
+    const meta=climbs.map(c=>({...c,photos:(c.photos||[]).filter(u=>!u.startsWith('data:'))}));
+    localStorage.setItem(SK,JSON.stringify({mountains,climbs:meta,customBadges,nextMtnId,nextClimbId}));
+  }catch(e){
+    toast('❌ 保存失敗：'+e.message);console.warn(e);
+  }
+}
+async function _initApp(){
+  loadData();
+  // 旧データ移行：localStorageにbase64写真が残っている場合はIndexedDBへ移す
+  let migrated=false;
+  for(const c of climbs){
+    const b64=(c.photos||[]).filter(u=>u.startsWith('data:'));
+    if(b64.length){await _savePhotos(c.id,b64);c.photos=(c.photos||[]).filter(u=>!u.startsWith('data:'));migrated=true;}
+  }
+  if(migrated){saveAll();toast('📦 写真を新しい保存方式に移行しました');}
+  // IndexedDBから写真を読み込んでメモリ上のclimbsに反映
+  await Promise.all(climbs.map(async c=>{
+    const idb=await _loadPhotos(c.id);
+    if(idb.length)c.photos=[...(c.photos||[]),...idb];
+    if(!c.photos)c.photos=[];
+  }));
+  render();
+}
+
+function openIoPanel(){document.getElementById('io-overlay').classList.remove('hidden');}
+function closeIoPanel(){document.getElementById('io-overlay').classList.add('hidden');}
+
+// iPhone用：写真なしJSON
+function doExportMeta(){
+  const climbsMeta=climbs.map(c=>({...c,photos:(c.photos||[]).filter(u=>!u.startsWith('data:'))}));
+  const data={version:4,exportedAt:new Date().toISOString(),mountains,climbs:climbsMeta,customBadges,nextMtnId,nextClimbId};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
+  a.href=url;a.download='峰々の記録_'+date+'.json';a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('📤 JSONエクスポート完了！LINEでiPhoneに送ってください');
+}
+
+// PC用：写真込みZIP
+async function doExport(){
+  const btn=document.getElementById('export-btn');
+  btn.style.opacity='.5';btn.style.pointerEvents='none';
+  try{
+    const zip=new JSZip();
+    const climbsMeta=climbs.map(c=>({...c,photos:(c.photos||[]).filter(u=>!u.startsWith('data:'))}));
+    const meta={version:4,exportedAt:new Date().toISOString(),mountains,climbs:climbsMeta,customBadges,nextMtnId,nextClimbId};
+    zip.file('data.json',JSON.stringify(meta,null,2));
+    const photoFolder=zip.folder('photos');
+    for(const c of climbs){
+      const b64photos=(c.photos||[]).filter(u=>u.startsWith('data:'));
+      b64photos.forEach((u,i)=>{
+        const b64=u.replace(/^data:image\/\w+;base64,/,'');
+        const ext=u.match(/data:image\/(\w+)/)?.[1]||'jpg';
+        photoFolder.file(c.id+'_'+i+'.'+ext,b64,{base64:true});
+      });
+    }
+    const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const date=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
+    a.href=url;a.download='峰々の記録_'+date+'.zip';a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    toast('📦 ZIPエクスポート完了！');
+  }catch(err){
+    toast('❌ エクスポート失敗: '+err.message);console.error(err);
+  }
+  btn.style.opacity='';btn.style.pointerEvents='';
+}
+
+function doImport(e,type){
+  const file=e.target.files[0];if(!file)return;
+  const isZip=(type==='zip')||file.name.endsWith('.zip');
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{
+      let importedMeta,photoMap={};
+      if(isZip){
+        const zip=await JSZip.loadAsync(ev.target.result);
+        const jsonFile=zip.file('data.json');
+        if(!jsonFile){alert('data.jsonが見つかりません');return;}
+        importedMeta=JSON.parse(await jsonFile.async('string'));
+        const photoFiles=zip.folder('photos');
+        if(photoFiles){
+          const promises=[];
+          photoFiles.forEach((path,f)=>{
+            if(f.dir)return;
+            promises.push(f.async('base64').then(b64=>{
+              const name=path.replace('photos/','');
+              const ext=name.split('.').pop()||'jpg';
+              const [cidStr,idxStr]=name.replace('.'+ext,'').split('_');
+              const cid=parseInt(cidStr),idx=parseInt(idxStr);
+              if(!photoMap[cid])photoMap[cid]=[];
+              photoMap[cid][idx]='data:image/'+ext+';base64,'+b64;
+            }));
+          });
+          await Promise.all(promises);
+        }
+      } else {
+        importedMeta=JSON.parse(ev.target.result);
+      }
+      if(!importedMeta.mountains||!importedMeta.climbs){alert('データが見つかりません');return;}
+      if(!confirm('📥 インポートしますか？\n\n山：'+importedMeta.mountains.length+'座　登頂記録：'+importedMeta.climbs.length+'件\n\n※現在のデータは上書きされます'))return;
+      mountains=importedMeta.mountains;
+      customBadges=importedMeta.customBadges||[];
+      nextMtnId=importedMeta.nextMtnId||10;
+      nextClimbId=importedMeta.nextClimbId||500;
+      climbs=await Promise.all(importedMeta.climbs.map(async c=>{
+        const fromZip=photoMap[c.id]||[];
+        const fromJson=(c.photos||[]).filter(u=>u.startsWith('data:'));
+        const allB64=[...fromZip,...fromJson];
+        const extPhotos=(c.photos||[]).filter(u=>!u.startsWith('data:'));
+        if(allB64.length)await _savePhotos(c.id,allB64);
+        return {...c,photos:[...extPhotos,...allB64]};
+      }));
+      saveAll();render();switchTab('home',document.querySelectorAll('.tb')[0]);closeIoPanel();
+      toast('✓ インポート完了！山'+importedMeta.mountains.length+'座・登頂'+importedMeta.climbs.length+'件');
+    }catch(err){alert('読み込みに失敗しました: '+err.message);console.error(err);}
+    e.target.value='';
+  };
+  if(isZip)reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function dc(d){return d==='上級'?'dh':d==='中級'?'dm':'de'}
+function pb(c){return c.partial?'<span class="db dp">⚠️ 途中下山</span>':''}
+function mClimbs(id){return climbs.filter(c=>c.mtnId===id).sort((a,b)=>a.date.localeCompare(b.date))}
+function mLatest(id){const cs=mClimbs(id);return cs[cs.length-1]||null}
+function ordinal(n){return n+'回目'}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800)}
+function render(){renderHome();renderHikes();renderPhotos();renderBadges()}
+
+function buildYearlyHtml(){
+  // 年ごとに集計
+  const yearMap={};
+  climbs.forEach(c=>{
+    const y=c.date?c.date.slice(0,4):'不明';
+    if(!yearMap[y])yearMap[y]={year:y};
+  });
+  const years=Object.keys(yearMap).sort((a,b)=>b.localeCompare(a));
+  if(!years.length)return '';
+  const cards=years.map(y=>{
+    const yc=climbs.filter(c=>c.date&&c.date.startsWith(y));
+    const summits=yc.filter(c=>!c.partial);
+    const partials=yc.filter(c=>c.partial);
+    const mtnSet=new Set(summits.map(c=>c.mtnId));
+    // 山ごとにまとめる
+    const byMtn={};
+    yc.forEach(c=>{
+      if(!byMtn[c.mtnId])byMtn[c.mtnId]={mtnId:c.mtnId,s:0,p:0};
+      c.partial?byMtn[c.mtnId].p++:byMtn[c.mtnId].s++;
+    });
+    const rows=Object.values(byMtn).map(r=>{
+      const m=mountains.find(x=>x.id===r.mtnId);
+      if(!m)return '';
+      return '<div class="yr-row" onclick="showDetail('+m.id+')" style="cursor:pointer">'
+        +'<div class="yr-mtn-ico" style="background:'+m.bg+'">'+m.emoji+'</div>'
+        +'<div style="flex:1"><div class="yr-mtn-name">'+esc(m.name)+'</div>'
+        +'<div class="yr-mtn-sub">'+(m.elevation?m.elevation+'m · ':'')+esc(m.location||'')+'</div></div>'
+        +'<div class="yr-mtn-cnt">'
+        +(r.s?'<span class="yr-badge yr-badge-g">'+r.s+'登頂</span>':'')
+        +(r.p?'<span class="yr-badge yr-badge-p">⚠️'+r.p+'途中</span>':'')
+        +'<span style="color:#5aaa78;font-size:16px;margin-left:4px">›</span>'
+        +'</div></div>';
+    }).join('');
+    return '<div class="yr-card">'
+      +'<div class="yr-head" onclick="toggleYr(\''+y+'\')">'
+      +'<div class="yr-year">'+y+'年</div>'
+      +'<div class="yr-summary">'
+      +'<span class="yr-badge yr-badge-g">'+mtnSet.size+'座 · '+summits.length+'登頂</span>'
+      +(partials.length?'<span class="yr-badge yr-badge-p">⚠️'+partials.length+'途中下山</span>':'')
+      +'</div>'
+      +'<span class="yr-chevron" id="yr-chev-'+y+'">›</span>'
+      +'</div>'
+      +'<div class="yr-body" id="yr-body-'+y+'">'
+      +'<div class="yr-rows">'+rows+'</div>'
+      +'</div></div>';
+  }).join('');
+  return '<div class="sl">年度別集計</div><div class="yr-section">'+cards+'</div>';
+}
+function toggleYr(y){
+  const b=document.getElementById('yr-body-'+y);
+  const ch=document.getElementById('yr-chev-'+y);
+  if(!b)return;
+  const open=b.classList.toggle('open');
+  ch.classList.toggle('open',open);
+}
+function renderHome(){
+  const totalMtns=mountains.length,totalClimbs=climbs.length,hyaku=mountains.filter(m=>m.tags.includes('百名山')).length,totalDist=climbs.reduce((a,c)=>a+(+c.distance||0),0),recent=climbs.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
+  const statsHtml='<div class="sg"><div class="sc" style="background:#eaf8ee;border:1px solid rgba(46,136,72,.1)"><div class="si">🏔️</div><div class="slb" style="color:#2e8848">登山した山</div><div class="sv" style="color:#2e8848">'+totalMtns+'<span class="su">座</span></div></div><div class="sc" style="background:#eaeeff;border:1px solid rgba(64,80,176,.1)"><div class="si">📅</div><div class="slb" style="color:#4050b0">総登頂回数</div><div class="sv" style="color:#4050b0">'+totalClimbs+'<span class="su">回</span></div></div><div class="sc" style="background:#fff8e4;border:1px solid rgba(176,112,32,.1)"><div class="si">📜</div><div class="slb" style="color:#b07020">百名山</div><div class="sv" style="color:#b07020">'+hyaku+'<span class="su">座</span></div></div><div class="sc" style="background:#f4eaff;border:1px solid rgba(128,64,176,.1)"><div class="si">→</div><div class="slb" style="color:#8040b0">総歩行距離</div><div class="sv" style="color:#8040b0">'+totalDist.toFixed(1)+'<span class="su">km</span></div></div></div>';
+  const recentHtml='<div class="sl">最近の登頂</div>'+(
+    !recent.length
+      ?'<div class="empty"><div class="ei">🏔️</div><p>まだ記録がありません<br>右上の＋から山を追加してください</p></div>'
+      :recent.map(c=>{const m=mountains.find(x=>x.id===c.mtnId);if(!m)return '';const cs=mClimbs(m.id);const num=cs.findIndex(x=>x.id===c.id)+1;return '<div class="card" onclick="showDetail('+m.id+','+c.id+')"><div class="ci" style="background:'+m.bg+'">'+m.emoji+'</div><div style="flex:1"><div class="cn">'+esc(m.name)+'<span style="font-size:10px;color:#5aaa78;margin-left:7px;font-weight:500">'+ordinal(num)+'</span></div><div class="cs">'+c.date+(c.distance?' · '+c.distance+'km':'')+(c.weather?' · '+esc(c.weather):'')+'</div></div><div style="color:#5aaa78;font-size:18px">›</div></div>';}).join('')
+  )+'<button class="bab" onclick="openMtnModal()">＋ 山を追加する</button>';
+  document.getElementById('tab-home').innerHTML=statsHtml+buildYearlyHtml()+recentHtml;
+}
+function renderHikes(){
+  const sorted=mountains.slice().sort((a,b)=>{const la=mLatest(a.id),lb2=mLatest(b.id);if(!la&&!lb2)return 0;if(!la)return 1;if(!lb2)return -1;return lb2.date.localeCompare(la.date);});
+  document.getElementById('tab-hikes').innerHTML=`<div class="sl">山の記録 · ${mountains.length}座 / ${climbs.length}登頂</div>${!sorted.length?'<div class="empty"><div class="ei">📋</div><p>記録がありません</p></div>':sorted.map(m=>{const cs=mClimbs(m.id);const latest=cs[cs.length-1];return `<div class="mc" id="mc-${m.id}"><div class="mc-head" onclick="toggleMc(${m.id})"><div class="mc-icon" style="background:${m.bg}">${m.emoji}</div><div style="flex:1"><div class="mc-name">${esc(m.name)}</div><div class="mc-sub">${m.elevation?m.elevation+'m':''}${m.location?' · '+esc(m.location):''}${m.tags.length?' · '+m.tags.slice(0,2).map(t=>esc(t)).join('・'):''}</div>${cs.length?`<div style="font-size:10px;color:#5a7a60;margin-top:3px">直近：${latest.date}　計${cs.length}回登頂</div>`:'<div style="font-size:10px;color:#96b89a;margin-top:3px">登頂記録なし</div>'}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0"><span class="mc-badge-count">${cs.filter(c=>!c.partial).length}登頂${cs.some(c=>c.partial)?' · ⚠️'+cs.filter(c=>c.partial).length+'途中下山':''}</span><span class="mc-expand" id="mc-exp-${m.id}">›</span></div></div><div class="climbs-wrap" id="cw-${m.id}">${cs.map((c,i)=>`<div class="climb-item"><div style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><span class="climb-num">${ordinal(i+1)}</span><span class="db ${dc(c.difficulty)}">${c.difficulty}</span>${pb(c)}</div><div class="climb-date">${c.date}${c.weather?' ☀ '+esc(c.weather):''}${c.with?' 👥 '+esc(c.with):''}</div><div class="climb-stats">${c.distance?`<span class="cst"><b style="color:#2e7848;font-size:10px">→</b>${c.distance}km</span>`:''}${c.duration?`<span class="cst"><b style="color:#2e7848;font-size:10px">◷</b>${esc(c.duration)}</span>`:''}</div>${c.note?`<div class="climb-note-preview">${esc(c.note)}</div>`:''}${c.photos&&c.photos.length?`<div class="climb-photos-strip">${c.photos.map(p=>`<div class="cph" onclick="openLb2('${esc(p)}',${c.id})"><img src="${p}" loading="lazy"></div>`).join('')}</div>`:''}<div class="climb-actions"><button class="ca-btn ca-view" onclick="showDetail(${m.id},${c.id})">詳細</button><button class="ca-btn ca-edit" onclick="openEditClimbModal(${c.id})">✏️ 編集</button><button class="ca-btn ca-del" onclick="confirmDelClimb(${c.id})">🗑</button></div></div>`).join('')}<button class="add-climb-btn" onclick="openClimbModal(${m.id})">＋ ${esc(m.name)}の登頂記録を追加</button></div><div class="mc-foot"><button class="mf-btn mf-edit" onclick="openEditMtnModal(${m.id})">✏️ 山の情報を編集</button><button class="mf-btn mf-del" onclick="confirmDelMtn(${m.id})">🗑 山ごと削除</button></div></div>`;}).join('')}`;
+}
+function toggleMc(mtnId){const cw=document.getElementById('cw-'+mtnId);const exp=document.getElementById('mc-exp-'+mtnId);const open=cw.classList.toggle('open');exp.classList.toggle('open',open);}
+function renderPhotos(){
+  const items=[];climbs.forEach(c=>{const m=mountains.find(x=>x.id===c.mtnId);if(!m||!c.photos||!c.photos.length)return;const cs=mClimbs(m.id);const num=cs.findIndex(x=>x.id===c.id)+1;c.photos.forEach(p=>items.push({photo:p,mtn:m,climb:c,num}));});items.sort((a,b)=>b.climb.date.localeCompare(a.climb.date));
+  document.getElementById('tab-photos').innerHTML=`<div class="sl">フォトギャラリー · ${items.length}枚</div>${!items.length?'<div class="empty"><div class="ei">📷</div><p>写真がありません</p></div>':`<div class="pg">${items.map((it,i)=>`<div class="pi ${i===0?'wide':'sq'}" onclick="showDetail(${it.mtn.id},${it.climb.id})"><img src="${it.photo}" alt="${esc(it.mtn.name)}" loading="lazy"><div class="po"></div><div class="pinfo"><div class="pn">${esc(it.mtn.name)}</div><div class="pe">${it.climb.date} · ${ordinal(it.num)}</div></div><div class="pemoji">${it.mtn.emoji}</div></div>`).join('')}</div>`}`;
+}
+function renderBadges(){
+  const totalMtns=mountains.length,totalClimbs2=climbs.length,hyaku=mountains.filter(m=>m.tags.includes('百名山')).length,multiClimb=mountains.filter(m=>mClimbs(m.id).length>=2).length,over3k=mountains.some(m=>+m.elevation>=3000),over2k=mountains.some(m=>+m.elevation>=2000),longDist=climbs.some(c=>+c.distance>=20),hasFall=climbs.some(c=>c.note&&c.note.includes('紅葉'));
+  const autoBadges=[{name:'初登頂',icon:'🏔️',earned:totalClimbs2>=1,cond:'初めての登頂記録'},{name:'百名山ハンター',icon:'📜',earned:hyaku>=1,cond:'百名山タグが1座以上'},{name:'3000m超え',icon:'☁️',earned:over3k,cond:'標高3000m以上の山'},{name:'2000m超え',icon:'🗻',earned:over2k,cond:'標高2000m以上の山'},{name:'リピーター',icon:'🔁',earned:multiClimb>=1,cond:'同じ山に2回以上登頂'},{name:'紅葉ハイカー',icon:'🍂',earned:hasFall,cond:'紅葉の山行記録あり'},{name:'ロングトレイル',icon:'🥾',earned:longDist,cond:'20km以上の山行'},{name:'5登頂達成',icon:'⭐',earned:totalClimbs2>=5,cond:'合計5回の登頂'},{name:'10登頂達成',icon:'🌟',earned:totalClimbs2>=10,cond:'合計10回の登頂'},{name:'10座制覇',icon:'🗺️',earned:totalMtns>=10,cond:'10座の山を記録'},{name:'百名山10座',icon:'🎖️',earned:hyaku>=10,cond:'百名山10座以上'}];
+  const earnedAuto=autoBadges.filter(b=>b.earned).length,earnedCustom=customBadges.filter(b=>b.earned).length,total=autoBadges.length+customBadges.length,earned=earnedAuto+earnedCustom;
+  document.getElementById('tab-badges').innerHTML=`<div class="bgh"><div class="sl" style="margin:0">獲得バッジ</div><div class="bgc">${earned} / ${total}</div></div><div class="pbb"><div class="pb" style="width:${total?Math.round(earned/total*100):0}%"></div></div><div class="sl" style="margin-bottom:8px">自動バッジ</div><div class="bgrid" style="margin-bottom:20px">${autoBadges.map(b=>`<div class="bi ${b.earned?'earned':'locked'}"><div class="bii">${b.icon}</div><div class="bin ${b.earned?'earned':'locked'}">${b.name}</div>${b.earned?'<div class="bck">✓ 達成</div>':'<div style="font-size:8px;color:#b0c8b0;margin-top:3px;line-height:1.3;padding:0 2px">'+esc(b.cond)+'</div>'}</div>`).join('')}</div><div class="sl" style="margin-bottom:8px">マイバッジ</div>${customBadges.length?`<div class="bgrid" style="margin-bottom:12px">${customBadges.map(b=>`<div class="bi bi-custom ${b.earned?'earned':'locked'}"><div class="bii">${b.icon||'🏅'}</div><div class="bin ${b.earned?'earned':'locked'}">${esc(b.name)}</div>${b.earned?'<div class="bck">✓ 達成</div>':''}<div class="bi-edit-row"><button class="bi-edit-small edit" onclick="openEditBadge(${b.id})">編集</button><button class="bi-edit-small del" onclick="delCustomBadge(${b.id})">削除</button></div></div>`).join('')}</div>`:'<div style="font-size:12px;color:#96b89a;margin-bottom:14px">まだマイバッジがありません</div>'}<button class="badge-add-btn" onclick="openBadgeModal()">＋ マイバッジを追加</button>`;
+}
+
+let detailMtnId=null,_prevTab='home',_prevBtn=null;
+function showDetail(mtnId,scrollToClimbId){
+  // 現在どのタブが表示されているか記憶（戻るボタン用）
+  const activeTab=document.querySelector('.tb.active');
+  if(activeTab){
+    const tabs=['home','hikes','photos','badges'];
+    const idx=[...document.querySelectorAll('.tb')].indexOf(activeTab);
+    if(idx>=0){_prevTab=tabs[idx];_prevBtn=activeTab;}
+  }
+  detailMtnId=mtnId;const m=mountains.find(x=>x.id===mtnId);if(!m)return;const cs=mClimbs(mtnId);
+  document.getElementById('tab-detail').innerHTML=`<button class="back-btn" onclick="goBack()">‹ 戻る</button><div class="detail-mtn-head"><div class="detail-ico" style="background:${m.bg}">${m.emoji}</div><div><div class="detail-mtn-name">${esc(m.name)}</div><div class="detail-mtn-sub">${m.elevation?m.elevation+'m · ':''}${m.location?esc(m.location):''}${m.tags.length?' · '+m.tags.map(t=>esc(t)).join(' · '):''}</div><div style="font-size:11px;color:#2e7848;font-weight:600;margin-top:4px">計${cs.length}回登頂</div>${m.tags.length?`<div class="tags" style="margin-top:6px">${m.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}</div></div>${cs.map((c,i)=>`<div class="cd" id="cd-${c.id}"><div class="cd-header"><span class="cd-num">${ordinal(i+1)}</span><span class="cd-date">${c.date}</span><span class="db ${dc(c.difficulty)}">${c.difficulty}</span>${pb(c)}</div>${c.photos&&c.photos.length?`<div class="dpw"><img id="ci-main-${c.id}" src="${c.photos[0]}" alt="" onclick="openLbClimb(${c.id},0)">${c.weather?`<div class="ddiff">${esc(c.weather)}</div>`:''}</div>${c.photos.length>1?`<div class="pslider">${c.photos.map((p,pi)=>`<div class="pslide ${pi===0?'act':''}" onclick="selSlide('${esc(p)}',${c.id},this)"><img src="${p}" loading="lazy"></div>`).join('')}</div>`:''}`:''}><div class="dstats"><div class="dstat"><div class="dsico">→</div><div class="dslb">距離</div><div class="dsval">${c.distance?c.distance+'km':'—'}</div></div><div class="dstat"><div class="dsico">◷</div><div class="dslb">時間</div><div class="dsval">${esc(c.duration)||'—'}</div></div><div class="dstat"><div class="dsico">👥</div><div class="dslb">同行</div><div class="dsval" style="font-size:11px">${esc(c.with)||'—'}</div></div></div>${c.note?`<div class="mbox"><div class="mlb">感想・メモ</div><div class="mtxt">${esc(c.note)}</div></div>`:''}<div class="cd-actions"><button class="cda-btn cda-edit" onclick="openEditClimbModal(${c.id})">✏️ 編集する</button><button class="cda-btn cda-del" onclick="confirmDelClimb(${c.id})">🗑 削除</button></div></div>`).join('')}<button class="add-climb-big" onclick="openClimbModal(${mtnId})">＋ ${esc(m.name)}の登頂記録を追加</button><button class="detail-del-mtn" onclick="confirmDelMtn(${mtnId})">🗑 「${esc(m.name)}」の記録をすべて削除</button>`;
+  document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('hidden'));
+  document.getElementById('tab-detail').classList.remove('hidden');
+  if(scrollToClimbId){setTimeout(()=>{const el=document.getElementById('cd-'+scrollToClimbId);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);}
+}
+function switchTab(name,btn){_prevTab=name;_prevBtn=btn;document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.add('hidden'));document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));if(name==='home')renderHome();else if(name==='hikes')renderHikes();else if(name==='photos')renderPhotos();else if(name==='badges')renderBadges();document.getElementById('tab-'+name).classList.remove('hidden');if(btn)btn.classList.add('active');window.scrollTo(0,0);}
+function goBack(){switchTab(_prevTab||'hikes',_prevBtn||document.querySelectorAll('.tb')[1]);}
+function selSlide(src,cid,el){document.getElementById('ci-main-'+cid).src=src;el.closest('.pslider').querySelectorAll('.pslide').forEach(s=>s.classList.remove('act'));el.classList.add('act');}
+let lbPhotos=[],lbIdx=0;
+function openLbClimb(cid,idx){const c=climbs.find(x=>x.id===cid);if(!c||!c.photos||!c.photos.length)return;lbPhotos=c.photos;lbIdx=idx;document.getElementById('lb-img').src=lbPhotos[lbIdx];document.getElementById('lb').classList.remove('hidden');}
+function openLb2(src,cid){const c=climbs.find(x=>x.id===cid);if(!c)return;lbPhotos=c.photos&&c.photos.length?c.photos:[src];lbIdx=lbPhotos.indexOf(src);if(lbIdx<0)lbIdx=0;document.getElementById('lb-img').src=lbPhotos[lbIdx];document.getElementById('lb').classList.remove('hidden');}
+function closeLb(){document.getElementById('lb').classList.add('hidden')}
+function lbNav(dir){lbIdx=(lbIdx+dir+lbPhotos.length)%lbPhotos.length;document.getElementById('lb-img').src=lbPhotos[lbIdx]}
+let editingMtnId=null,editingClimbId=null,climbForMtnId=null,modalPhotos=[],mmTags=[],editingBadgeId=null;
+function openMtnModal(){editingMtnId=null;mmTags=[];document.getElementById('mtn-modal-title').textContent='山を追加';['mm-name','mm-elev','mm-loc'].forEach(id=>document.getElementById(id).value='');document.getElementById('mm-tag-input').value='';renderMmTags();document.getElementById('mtn-modal').classList.remove('hidden');}
+function openEditMtnModal(id){const m=mountains.find(x=>x.id===id);if(!m)return;editingMtnId=id;mmTags=[...m.tags];document.getElementById('mtn-modal-title').textContent='山の情報を編集';document.getElementById('mm-name').value=m.name||'';document.getElementById('mm-elev').value=m.elevation||'';document.getElementById('mm-loc').value=m.location||'';document.getElementById('mm-tag-input').value='';renderMmTags();document.getElementById('mtn-modal').classList.remove('hidden');}
+function closeMtnModal(){document.getElementById('mtn-modal').classList.add('hidden')}
+function handleMmTag(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const v=e.target.value.trim().replace(/,/g,'');if(v&&!mmTags.includes(v)){mmTags.push(v);renderMmTags();}e.target.value='';}}
+function removeMmTag(t){mmTags=mmTags.filter(x=>x!==t);renderMmTags()}
+function renderMmTags(){const wrap=document.getElementById('mm-tags-wrap');const inp=document.getElementById('mm-tag-input');wrap.innerHTML='';mmTags.forEach(t=>{const s=document.createElement('span');s.className='tc';s.innerHTML=`${esc(t)}<button onclick="removeMmTag('${esc(t)}')" title="削除">✕</button>`;wrap.appendChild(s);});wrap.appendChild(inp);}
+function submitMtn(){const name=document.getElementById('mm-name').value.trim();if(!name){alert('山の名前を入力してください');return}if(editingMtnId!==null){const idx=mountains.findIndex(m=>m.id===editingMtnId);if(idx>=0)mountains[idx]={...mountains[idx],name,elevation:+document.getElementById('mm-elev').value||null,location:document.getElementById('mm-loc').value.trim()||null,tags:[...mmTags]};toast('山の情報を更新しました ✓');}else{const id=nextMtnId++;mountains.push({id,name,elevation:+document.getElementById('mm-elev').value||null,location:document.getElementById('mm-loc').value.trim()||null,tags:[...mmTags],emoji:EMOJIS[id%EMOJIS.length],bg:BGS[id%BGS.length]});toast('山を追加しました ✓');}saveAll();closeMtnModal();render();if(editingMtnId!==null)showDetail(editingMtnId);else switchTab('hikes',document.querySelectorAll('.tb')[1]);}
+function openClimbModal(mtnId){editingClimbId=null;climbForMtnId=mtnId;modalPhotos=[];const m=mountains.find(x=>x.id===mtnId);document.getElementById('cm-title').textContent='登頂記録を追加';document.getElementById('cm-mtn-emoji').textContent=m?m.emoji:'⛰️';document.getElementById('cm-mtn-name-display').textContent=m?`📍 ${m.name}　${m.elevation?m.elevation+'m':''}${m.location?' · '+m.location:''}`:'';['cm-date','cm-dist','cm-dur','cm-weather','cm-with','cm-note'].forEach(id=>document.getElementById(id).value='');document.getElementById('cm-diff').value='初級';document.getElementById('cm-partial').checked=false;document.getElementById('cm-pmg').innerHTML='';document.getElementById('climb-modal').classList.remove('hidden');}
+function openEditClimbModal(cid){const c=climbs.find(x=>x.id===cid);if(!c)return;const m=mountains.find(x=>x.id===c.mtnId);editingClimbId=cid;climbForMtnId=c.mtnId;modalPhotos=(c.photos||[]).map(u=>({url:u,isNew:false}));document.getElementById('cm-title').textContent='登頂記録を編集';document.getElementById('cm-mtn-emoji').textContent=m?m.emoji:'⛰️';document.getElementById('cm-mtn-name-display').textContent=m?`📍 ${m.name}`:'';document.getElementById('cm-date').value=c.date||'';document.getElementById('cm-dist').value=c.distance||'';document.getElementById('cm-dur').value=c.duration||'';document.getElementById('cm-diff').value=c.difficulty||'初級';document.getElementById('cm-weather').value=c.weather||'';document.getElementById('cm-with').value=c.with||'';document.getElementById('cm-note').value=c.note||'';document.getElementById('cm-partial').checked=c.partial||false;renderClimbPmg();document.getElementById('climb-modal').classList.remove('hidden');}
+function closeClimbModal(){document.getElementById('climb-modal').classList.add('hidden')}
+function compressImage(file,maxW,maxH,quality){
+  return new Promise(resolve=>{
+    const r=new FileReader();
+    r.onload=ev=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>maxW||h>maxH){
+          const ratio=Math.min(maxW/w,maxH/h);
+          w=Math.round(w*ratio);h=Math.round(h*ratio);
+        }
+        const canvas=document.createElement('canvas');
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',quality));
+      };
+      img.src=ev.target.result;
+    };
+    r.readAsDataURL(file);
+  });
+}
+function handleClimbPhotos(e){
+  const files=Array.from(e.target.files);
+  let done=0;
+  files.forEach(file=>{
+    compressImage(file,1200,1200,0.75).then(url=>{
+      modalPhotos.push({url,isNew:true});
+      done++;
+      if(done===files.length)renderClimbPmg();
+    });
+  });
+  e.target.value='';
+}
+function removeClimbPhoto(i){modalPhotos.splice(i,1);renderClimbPmg()}
+function renderClimbPmg(){document.getElementById('cm-pmg').innerHTML=modalPhotos.map((p,i)=>`<div class="pm-thumb"><img src="${p.url}" alt=""><button class="pm-del" onclick="removeClimbPhoto(${i})">✕</button>${i===0?'<div class="pm-badge">表紙</div>':''}</div>`).join('');}
+function submitClimb(){
+  const date=document.getElementById('cm-date').value;
+  if(!date){alert('日付を選択してください');return;}
+  const allPhotos=modalPhotos.map(p=>p.url);
+  const extPhotos=allPhotos.filter(u=>!u.startsWith('data:'));
+  const b64Photos=allPhotos.filter(u=>u.startsWith('data:'));
+  const data={mtnId:climbForMtnId,date,distance:+document.getElementById('cm-dist').value||null,duration:document.getElementById('cm-dur').value.trim()||null,difficulty:document.getElementById('cm-diff').value,weather:document.getElementById('cm-weather').value.trim()||null,with:document.getElementById('cm-with').value.trim()||null,note:document.getElementById('cm-note').value.trim(),partial:document.getElementById('cm-partial').checked,photos:allPhotos};
+  let targetId;
+  if(editingClimbId!==null){const idx=climbs.findIndex(c=>c.id===editingClimbId);if(idx>=0)climbs[idx]={...climbs[idx],...data};targetId=editingClimbId;toast('登頂記録を更新しました ✓');}
+  else{data.id=nextClimbId++;climbs.push(data);targetId=data.id;toast('登頂記録を追加しました ✓');}
+  _savePhotos(targetId,b64Photos).then(()=>{saveAll();closeClimbModal();render();showDetail(climbForMtnId,targetId);});
+}
+function confirmDelMtn(mtnId){const m=mountains.find(x=>x.id===mtnId);if(!m)return;const n=mClimbs(mtnId).length;document.getElementById('cm-txt').textContent=`「${m.name}」とすべての登頂記録（${n}件）を削除します。`;document.getElementById('cok').onclick=async()=>{await Promise.all(mClimbs(mtnId).map(c=>_delPhotos(c.id)));mountains=mountains.filter(x=>x.id!==mtnId);climbs=climbs.filter(c=>c.mtnId!==mtnId);saveAll();render();switchTab('hikes',document.querySelectorAll('.tb')[1]);closeConfirm();toast('削除しました')};document.getElementById('confirm').classList.remove('hidden');}
+function confirmDelClimb(cid){const c=climbs.find(x=>x.id===cid);if(!c)return;const m=mountains.find(x=>x.id===c.mtnId);const cs=mClimbs(c.mtnId);const num=cs.findIndex(x=>x.id===cid)+1;document.getElementById('cm-txt').textContent=`「${m?m.name:''}」の${ordinal(num)}の記録を削除します。`;const mtnId=c.mtnId;document.getElementById('cok').onclick=async()=>{await _delPhotos(cid);climbs=climbs.filter(x=>x.id!==cid);saveAll();render();showDetail(mtnId);closeConfirm();toast('登頂記録を削除しました')};document.getElementById('confirm').classList.remove('hidden');}
+function closeConfirm(){document.getElementById('confirm').classList.add('hidden')}
+function openBadgeModal(){editingBadgeId=null;document.getElementById('bm-title').textContent='マイバッジを追加';document.getElementById('bm-icon').value='';document.getElementById('bm-name').value='';document.getElementById('bm-earned').checked=false;document.getElementById('badge-modal').classList.remove('hidden')}
+function openEditBadge(id){const b=customBadges.find(x=>x.id===id);if(!b)return;editingBadgeId=id;document.getElementById('bm-title').textContent='バッジを編集';document.getElementById('bm-icon').value=b.icon||'';document.getElementById('bm-name').value=b.name||'';document.getElementById('bm-earned').checked=b.earned||false;document.getElementById('badge-modal').classList.remove('hidden')}
+function closeBadgeModal(){document.getElementById('badge-modal').classList.add('hidden')}
+function saveBadge(){const icon=document.getElementById('bm-icon').value.trim()||'🏅';const name=document.getElementById('bm-name').value.trim();if(!name){alert('バッジ名を入力してください');return}const earned=document.getElementById('bm-earned').checked;if(editingBadgeId!==null){const idx=customBadges.findIndex(b=>b.id===editingBadgeId);if(idx>=0)customBadges[idx]={...customBadges[idx],icon,name,earned};toast('バッジを更新しました ✓')}else{customBadges.push({id:Date.now(),icon,name,earned});toast('バッジを追加しました ✓')}saveAll();closeBadgeModal();renderBadges();}
+function delCustomBadge(id){customBadges=customBadges.filter(b=>b.id!==id);saveAll();renderBadges();toast('バッジを削除しました')}
+document.addEventListener('keydown',e=>{if(!document.getElementById('lb').classList.contains('hidden')){if(e.key==='ArrowLeft')lbNav(-1);if(e.key==='ArrowRight')lbNav(1);if(e.key==='Escape')closeLb();return;}if(e.key==='Escape'){['mtn-modal','climb-modal','badge-modal'].forEach(id=>{if(!document.getElementById(id).classList.contains('hidden'))document.getElementById(id).classList.add('hidden')});}});
+_initApp();
+</script>
+
+<script>
+// ── PWA: manifest動的生成 ────────────────────────────────
+(function(){
+  const manifest = {
+    name: '峰々の記録',
+    short_name: '峰々',
+    description: '登山記録アプリ',
+    start_url: './',
+    display: 'standalone',
+    background_color: '#f0f8f2',
+    theme_color: '#2e7848',
+    orientation: 'portrait',
+    icons: [
+      { src: 'data:image/png;base64,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', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: 'data:image/png;base64,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', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+})();
+
+// ── Service Worker登録 ───────────────────────────────────
+if('serviceWorker' in navigator){
+  const swCode = `
+const CACHE='mj-v2';
+const ASSETS=[location.href];
+self.addEventListener('install',e=>{self.skipWaiting();});
+self.addEventListener('activate',e=>{self.clients.claim();});
+self.addEventListener('fetch',e=>{
+  e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
+});
+`;
+  const swBlob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(e=>console.log('SW:', e));
+}
+
+// ── iOS: ホーム画面追加バナー ────────────────────────────
+(function(){
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone;
+  const dismissed = localStorage.getItem('pwa_banner_dismissed');
+  if(isIOS && !isStandalone && !dismissed){
+    setTimeout(()=>{
+      const banner = document.createElement('div');
+      banner.id = 'pwa-banner';
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a2e20;color:#fff;padding:16px 18px calc(16px + env(safe-area-inset-bottom));z-index:1000;display:flex;align-items:center;gap:12px;font-family:Georgia,serif';
+      banner.innerHTML = `
+        <img src="data:image/png;base64,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" style="width:40px;height:40px;border-radius:9px;flex-shrink:0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;margin-bottom:3px">アプリとして追加</div>
+          <div style="font-size:11px;opacity:.75;line-height:1.5">「共有」→「ホーム画面に追加」でアプリ化できます</div>
+        </div>
+        <button onclick="localStorage.setItem('pwa_banner_dismissed','1');document.getElementById('pwa-banner').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">閉じる</button>
+      `;
+      document.body.appendChild(banner);
+    }, 2000);
+  }
+})();
+</script>
+</body>
+</html>
